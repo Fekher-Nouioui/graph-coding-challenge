@@ -1,0 +1,48 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: code-challenge-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 5
+    networks:
+      - app-network
+
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: coding-challenge-app
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      # Mount source code for hot-reload during development
+      - ../src:/app/src
+    # Override CMD to enable hot-reload for development
+    command: ["src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    networks:
+      - app-network
+
+volumes:
+  mysql_data:
+
+networks:
+  app-network:
+    driver: bridge

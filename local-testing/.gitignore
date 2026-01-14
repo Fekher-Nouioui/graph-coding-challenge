@@ -1,0 +1,5 @@
+# Environment variables with sensitive credentials
+.env
+
+# Docker volumes and state
+*.log
