@@ -38,8 +38,11 @@ def create_graph(db):
     """Create a 5-level deep graph structure."""
     print("Creating graph structure...")
 
+    node_counter = 0
+
     # Level 0: Root node
-    root = Node(name="Root")
+    root = Node(name=f"Node {node_counter}")
+    node_counter += 1
     db.add(root)
     db.flush()
     print(f"Created Level 0: {root.name} (id={root.id})")
@@ -47,7 +50,8 @@ def create_graph(db):
     # Level 1: 3 children
     level_1_nodes = []
     for i in range(3):
-        node = Node(name=f"L1-Node-{i+1}")
+        node = Node(name=f"Node {node_counter}")
+        node_counter += 1
         db.add(node)
         db.flush()
         db.add(Edge(source_node_id=root.id, target_node_id=node.id))
@@ -58,7 +62,8 @@ def create_graph(db):
     level_2_nodes = []
     for parent in level_1_nodes:
         for i in range(3):
-            node = Node(name=f"L2-{parent.name}-Child-{i+1}")
+            node = Node(name=f"Node {node_counter}")
+            node_counter += 1
             db.add(node)
             db.flush()
             db.add(Edge(source_node_id=parent.id, target_node_id=node.id))
@@ -69,7 +74,8 @@ def create_graph(db):
     level_3_nodes = []
     for parent in level_2_nodes:
         for i in range(2):
-            node = Node(name=f"L3-{parent.name}-Child-{i+1}")
+            node = Node(name=f"Node {node_counter}")
+            node_counter += 1
             db.add(node)
             db.flush()
             db.add(Edge(source_node_id=parent.id, target_node_id=node.id))
@@ -80,7 +86,8 @@ def create_graph(db):
     level_4_nodes = []
     for parent in level_3_nodes:
         for i in range(2):
-            node = Node(name=f"L4-{parent.name}-Child-{i+1}")
+            node = Node(name=f"Node {node_counter}")
+            node_counter += 1
             db.add(node)
             db.flush()
             db.add(Edge(source_node_id=parent.id, target_node_id=node.id))
@@ -93,7 +100,8 @@ def create_graph(db):
         # Vary the number of children (1 or 2) to make it interesting
         num_children = 2 if idx % 3 == 0 else 1
         for i in range(num_children):
-            node = Node(name=f"L5-{parent.name}-Child-{i+1}")
+            node = Node(name=f"Node {node_counter}")
+            node_counter += 1
             db.add(node)
             db.flush()
             db.add(Edge(source_node_id=parent.id, target_node_id=node.id))
@@ -124,21 +132,22 @@ def print_statistics(db):
     print("=" * 50)
 
     # Show some sample nodes
-    root = db.query(Node).filter(Node.name == "Root").first()
+    root = db.query(Node).filter(Node.name == "Node 0").first()
     if root:
-        print(f"\nRoot node ID: {root.id}")
+        print(f"\nRoot node: {root.name} (ID: {root.id})")
         print(f"Use this to test: GET /nodes/{root.id}/connected")
 
     # Show a mid-level node
-    mid_node = db.query(Node).filter(Node.name.like("L2%")).first()
+    mid_node = db.query(Node).filter(Node.id == 5).first()
     if mid_node:
-        print(f"\nSample L2 node ID: {mid_node.id}")
+        print(f"\nSample mid-level node: {mid_node.name} (ID: {mid_node.id})")
         print(f"Use this to test: GET /nodes/{mid_node.id}/connected")
 
     # Show a leaf node
-    leaf_node = db.query(Node).filter(Node.name.like("L5%")).first()
-    if leaf_node:
-        print(f"\nSample L5 node ID: {leaf_node.id}")
+    all_nodes = db.query(Node).all()
+    if len(all_nodes) > 10:
+        leaf_node = all_nodes[-5]  # Pick a node near the end
+        print(f"\nSample leaf node: {leaf_node.name} (ID: {leaf_node.id})")
         print(f"Use this to test: GET /nodes/{leaf_node.id}/connected")
     print()
 
