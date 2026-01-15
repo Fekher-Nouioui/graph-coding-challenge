@@ -2,13 +2,15 @@
 
 A production-ready FastAPI service for managing and traversing directed graphs.
 
+**Repository**: https://github.com/Fekher-Nouioui/graph-coding-challenge
+
 ## Table of Contents
 - [Overview](#overview)
 - [Tech Stack](#tech-stack)
 - [Quick Start](#quick-start)
 - [Separation of Concerns](#separation-of-concerns)
 - [Database Schema](#database-schema)
-- 
+
 ---
 
 ## Overview
@@ -26,6 +28,7 @@ Graph: A → B → D
 Query: /nodes/A/connected
 Result: [B, C, D, E]
 ```
+---
 
 ## Tech Stack
 
@@ -49,7 +52,8 @@ Result: [B, C, D, E]
 
 ### 1. Clone and Navigate
 ```bash
-cd coding-challenge
+git clone https://github.com/Fekher-Nouioui/graph-coding-challenge.git
+cd graph-coding-challenge
 ```
 
 ### 2. Local Setup
