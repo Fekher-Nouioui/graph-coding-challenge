@@ -43,5 +43,5 @@ LICENSE*
 # Misc
 *.log
 .env.local
-.env
+local.env
 .env.*

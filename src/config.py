@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str #Reads from container's environment
 
     class Config:
-        env_file = ".env"
+        env_file = "local.env" #Fallback when starting from IDE
         case_sensitive = True
 
 
