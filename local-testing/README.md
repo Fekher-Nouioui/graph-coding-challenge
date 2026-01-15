@@ -11,16 +11,11 @@ This directory contains the Docker Compose setup for local development and testi
 
 1. **Create environment file:**
    ```bash
-   cp .env.example .env
+   cp .env.template .env
    ```
 
 2. **Configure credentials:**
-   Edit the `.env` file and replace the placeholder values with your actual credentials:
-   ```bash
-   # Update these values in .env:
-   MYSQL_ROOT_PASSWORD=the_root_password_of_your_choice
-   MYSQL_PASSWORD=the_password_of_your_choice
-   ```
+   Edit the `.env` file and replace the placeholder values with your actual credentials
 
 3. **Start the services:**
    ```bash
@@ -30,7 +25,6 @@ This directory contains the Docker Compose setup for local development and testi
 4. **Access the application:**
    - API: http://localhost:8000
    - API Docs: http://localhost:8000/docs
-   - MySQL: http://localhost:3306
 
 ## Services
 
@@ -38,9 +32,7 @@ This directory contains the Docker Compose setup for local development and testi
 - **Image:** Built from `../Dockerfile`
 - **Port:** 8000
 - **Environment:** Development mode with **hot-reload enabled** (`--reload` flag)
-- **Workers:** 1 (single worker for hot-reload compatibility)
 - **Volume mount:** `../src/` directory mounted to `/app/src/` for instant code changes
-- **Import path:** `src.main:app` (FastAPI app instance)
 - **Depends on:** MySQL database (waits for health check)
 
 ### Database (db)
@@ -52,7 +44,7 @@ This directory contains the Docker Compose setup for local development and testi
 
 ## Configuration
 
-All configuration is managed through the [.env](.env) file. See [.env.example](.env.example) for required variables:
+All configuration is managed through the [.env](.env) file. See [.env.template](.env.template) for required variables:
 
 - `MYSQL_ROOT_PASSWORD` - MySQL root password
 - `MYSQL_DATABASE` - Database name
@@ -67,10 +59,10 @@ All configuration is managed through the [.env](.env) file. See [.env.example](.
 ### MySQL Volume
 The MySQL database uses a Docker named volume (`mysql_data`) for data persistence. This means:
 
-- ✅ **Data survives container restarts** - `docker-compose down` and `docker-compose up` won't lose data
-- ✅ **Data survives container deletion** - Removing the container keeps the data
-- ✅ **Data survives image updates** - Upgrading MySQL image preserves your data
-- ❌ **Data is removed with `-v` flag** - `docker-compose down -v` deletes all data permanently
+- **Data survives container restarts** - `docker-compose down` and `docker-compose up` won't lose data
+- **Data survives container deletion** - Removing the container keeps the data
+- **Data survives image updates** - Upgrading MySQL image preserves your data
+- **Data is removed with `-v` flag** - `docker-compose down -v` deletes all data permanently
 
 ## Useful Commands
 
