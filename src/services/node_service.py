@@ -29,7 +29,6 @@ def get_connected_nodes(db: Session, node_id: int) -> dict:
         - Base case: Direct children (target_node_id) of source_node_id
         - Recursive case: Children of already discovered nodes
         - UNION DISTINCT prevents infinite loops in cyclic graphs
-        - Depth limit of 100 as safety measure
         - Indexed on source_node_id for optimal performance (idx_source)
 
     Example:
@@ -40,17 +39,16 @@ def get_connected_nodes(db: Session, node_id: int) -> dict:
         """
         WITH RECURSIVE reachable_nodes AS (
             -- Base case: Direct children of the starting node
-            SELECT target_node_id AS node_id, 1 as depth
+            SELECT target_node_id AS node_id
             FROM edges
             WHERE source_node_id = :node_id
 
             UNION DISTINCT
 
             -- Recursive case: Children of already discovered nodes
-            SELECT e.target_node_id, rn.depth + 1
+            SELECT e.target_node_id
             FROM edges e
             INNER JOIN reachable_nodes rn ON e.source_node_id = rn.node_id
-            WHERE rn.depth < 100  -- Safety limit to prevent infinite recursion
         )
         SELECT DISTINCT node_id
         FROM reachable_nodes
