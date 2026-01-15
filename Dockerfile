@@ -14,12 +14,15 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Create non-root user
+# Create non-root user to be used later (for security)
 RUN useradd -m -u 1000 appuser && \
     chown -R appuser:appuser /app
 
-# Copy only application source code
+# Copy application source code, migrations, and alembic config
 COPY --chown=appuser:appuser src/ ./src/
+COPY --chown=appuser:appuser migrations/ ./migrations/
+COPY --chown=appuser:appuser scripts/ ./scripts/
+COPY --chown=appuser:appuser alembic.ini .
 
 # Switch to non-root user
 USER appuser
