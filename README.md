@@ -32,15 +32,15 @@ Result: [B, C, D, E]
 
 ## Tech Stack
 
-| Component | Technology | Purpose                                  | Java Equivalent             |
-|-----------|-----------|------------------------------------------|-----------------------------|
-| **Framework** | FastAPI | Web Framework                            | Spring Boot                 |
-| **Database** | MySQL 8.0+ | Relational DB with recursive CTE support |                             |
-| **ORM** | SQLAlchemy | Database abstraction layer               | Hibernate / JPA             |
+| Component | Technology | Purpose                                  | Java Equivalent            |
+|-----------|-----------|------------------------------------------|----------------------------|
+| **Framework** | FastAPI | Web Framework                            | Spring Boot                |
+| **Database** | MySQL 8.0+ | Relational DB with recursive CTE support |                            |
+| **ORM** | SQLAlchemy | Database abstraction layer               |  JPA             |
 | **Validation** | Pydantic | Schema validation (DTOs)                 | Bean Validation API/Records |
-| **Migrations** | Alembic | Database version control                 | Flyway                      |
-| **Container** | Docker | Application containerization             |                             |
-| **Orchestration** | Docker Compose | Multi-container management               |                             |
+| **Migrations** | Alembic | Database version control                 | Flyway                     |
+| **Container** | Docker | Application containerization             |                            |
+| **Orchestration** | Docker Compose | Multi-container management               |                            |
 
 ---
 

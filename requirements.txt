@@ -1,8 +1,8 @@
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-sqlalchemy==2.0.23
-pymysql==1.1.0
+fastapi==0.104.1 #Like spring boot
+uvicorn[standard]==0.24.0 #Like Tomcat
+sqlalchemy==2.0.23 #Like JPA
+pymysql==1.1.0 #Like JDBC
 cryptography==41.0.7
-pydantic-settings==2.1.0
-alembic==1.12.1
-python-dotenv==1.0.0
+pydantic-settings==2.1.0 #Like configuration property
+alembic==1.12.1 #Like Flyway
+python-dotenv==1.0.0 #Like application.yaml

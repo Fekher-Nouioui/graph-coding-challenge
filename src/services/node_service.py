@@ -7,14 +7,44 @@ from src.models.node import Node
 from src.schemas.node import ConnectedNodesResponse
 
 
-def get_connected_nodes(db: Session, node_id: int) -> dict:
+def get_all_nodes(db: Session) -> List[Node]:
+    """Retrieve all nodes from the database.
+
+    Args:
+        db: SQLAlchemy database session
+
+    Returns:
+        List of all Node objects ordered by ID
+    """
+    return db.query(Node).order_by(Node.id).all()
+
+def get_node_by_id(db: Session, node_id: int) -> Node | None:
+    """Retrieve a single node by its ID.
+
+    Args:
+        db: SQLAlchemy database session
+        node_id: ID of the node to retrieve
+
+    Returns:
+        Node object if found, None otherwise
+    """
+    return db.query(Node).filter(Node.id == node_id).first()
+
+def get_node_by_name(db: Session, node_name: str) -> Node | None:
+    """Retrieve a single node by its name.
+
+    Args:
+        db: SQLAlchemy database session
+        node_name: Name of the node to retrieve
+
+    Returns:
+        Node object if found, None otherwise
+    """
+    return db.query(Node).filter(Node.name == node_name).first()
+
+
+def get_connected_nodes_cte(db: Session, node_id: int) -> dict:
     """Get all nodes reachable from the given node using a recursive CTE query.
-
-    This function implements the core challenge requirement: retrieve all
-    connected nodes using a SINGLE database query with MySQL's recursive CTE.
-
-    The query performs a depth-first traversal following directed edges from
-    the source node, handling cycles automatically with UNION DISTINCT.
 
     Args:
         db: SQLAlchemy database session
@@ -23,13 +53,6 @@ def get_connected_nodes(db: Session, node_id: int) -> dict:
     Returns:
         Dictionary with source node ID, list of reachable node IDs,
         and total count (timing will be added at the route handler level)
-
-    Technical Details:
-        - Uses MySQL 8.0+ WITH RECURSIVE syntax
-        - Base case: Direct children (target_node_id) of source_node_id
-        - Recursive case: Children of already discovered nodes
-        - UNION DISTINCT prevents infinite loops in cyclic graphs
-        - Indexed on source_node_id for optimal performance (idx_source)
 
     Example:
         Given graph: 1 -> 2 -> 3, 1 -> 4
@@ -65,44 +88,67 @@ def get_connected_nodes(db: Session, node_id: int) -> dict:
         "total_count": len(connected_ids),
     }
 
-
-def get_node_by_id(db: Session, node_id: int) -> Node | None:
-    """Retrieve a single node by its ID.
-
-    Args:
-        db: SQLAlchemy database session
-        node_id: ID of the node to retrieve
-
-    Returns:
-        Node object if found, None otherwise
-    """
-    return db.query(Node).filter(Node.id == node_id).first()
-
-
-def get_node_by_name(db: Session, node_name: str) -> Node | None:
-    """Retrieve a single node by its name.
+def get_connected_nodes_dfs(db: Session, node_id: int) -> dict:
+    """Get all nodes reachable from the given node using Level 2 approach:
+    Fetch all edges, then perform DFS in Python.
 
     Args:
         db: SQLAlchemy database session
-        node_name: Name of the node to retrieve
+        node_id: ID of the starting node
 
     Returns:
-        Node object if found, None otherwise
+        Dictionary with source node ID, list of reachable node IDs,
+        and total count (timing will be added at the route handler level)
+
+    Example:
+        Given graph: 1 -> 2 -> 3, 1 -> 4
+        get_connected_nodes_dfs(db, 1) returns [2, 3, 4]
     """
-    return db.query(Node).filter(Node.name == node_name).first()
+    from src.models.edge import Edge
 
+    # Step 1: Get ALL edges from the database (just one query!)
+    all_edges = db.query(Edge).all()
 
-def get_all_nodes(db: Session) -> List[Node]:
-    """Retrieve all nodes from the database.
+    # Step 2: Build an "adjacency list" - a dictionary showing connections
+    # Example: {1: [2, 3], 2: [4], 3: [5]}
+    # Meaning: 1 connects to 2 and 3, node 2 connects to 4, etc.
+    graph = {}
+    for edge in all_edges:
+        if edge.source_node_id not in graph:
+            graph[edge.source_node_id] = []
+        graph[edge.source_node_id].append(edge.target_node_id)
 
-    Args:
-        db: SQLAlchemy database session
+    # Step 3: Explore the graph using Depth-First Search (DFS)
+    visited = set()
 
-    Returns:
-        List of all Node objects ordered by ID
-    """
-    return db.query(Node).order_by(Node.id).all()
+    def explore(current_node):
+        """Recursively explore all nodes reachable from current_node"""
+        # If we've been here before, stop (prevents infinite loops)
+        if current_node in visited:
+            return
 
+        # Mark this node as visited
+        visited.add(current_node)
+
+        # Explore all neighbors (children)
+        if current_node in graph: # if not a leaf
+            for neighbor in graph[current_node]:
+                explore(neighbor)  # Recursive call
+
+    # Start exploring from the children of our starting node
+    # (We don't include the starting node itself)
+    if node_id in graph: # if searched node is not a leaf
+        for child in graph[node_id]:
+            explore(child)
+
+    # Return sorted list of visited nodes
+    connected_ids = sorted(list(visited))
+
+    return {
+        "source_node_id": node_id,
+        "connected_node_ids": connected_ids,
+        "total_count": len(connected_ids),
+    }
 
 def get_graph_visualization(db: Session) -> str:
     """Generate a simple graph visualization using indented notation.
@@ -341,76 +387,3 @@ def _draw_classic_tree(
                     lines.append(merged_line.rstrip())
 
     return lines
-
-
-def get_connected_nodes_dfs(db: Session, node_id: int) -> dict:
-    """Get all nodes reachable from the given node using Level 2 approach:
-    Fetch all edges, then perform DFS in Python.
-
-    This demonstrates the "Fetch Everything, Then Search in Python" approach
-    from the possibilities document. It's easier to understand but less optimal
-    than the recursive CTE approach.
-
-    Args:
-        db: SQLAlchemy database session
-        node_id: ID of the starting node
-
-    Returns:
-        Dictionary with source node ID, list of reachable node IDs,
-        and total count (timing will be added at the route handler level)
-
-    Technical Details:
-        - Single query to fetch ALL edges from database
-        - Builds adjacency list in memory
-        - Performs Depth-First Search (DFS) recursively in Python
-        - Automatically handles cycles with visited set
-
-    Example:
-        Given graph: 1 -> 2 -> 3, 1 -> 4
-        get_connected_nodes_dfs(db, 1) returns [2, 3, 4]
-    """
-    from src.models.edge import Edge
-
-    # Step 1: Get ALL edges from the database (just one query!)
-    all_edges = db.query(Edge).all()
-
-    # Step 2: Build an "adjacency list" - a dictionary showing connections
-    # Example: {1: [2, 3], 2: [4], 3: [5]}
-    # Meaning: 1 connects to 2 and 3, node 2 connects to 4, etc.
-    graph = {}
-    for edge in all_edges:
-        if edge.source_node_id not in graph:
-            graph[edge.source_node_id] = []
-        graph[edge.source_node_id].append(edge.target_node_id)
-
-    # Step 3: Explore the graph using Depth-First Search (DFS)
-    visited = set()
-
-    def explore(current_node):
-        """Recursively explore all nodes reachable from current_node"""
-        # If we've been here before, stop (prevents infinite loops)
-        if current_node in visited:
-            return
-
-        # Mark this node as visited
-        visited.add(current_node)
-
-        # Explore all neighbors (children)
-        if current_node in graph:
-            for neighbor in graph[current_node]:
-                explore(neighbor)  # Recursive call
-
-    # Start exploring from the children of our starting node
-    # (We don't include the starting node itself)
-    if node_id in graph:
-        for child in graph[node_id]:
-            explore(child)
-
-    # Return sorted list of visited nodes
-    connected_ids = sorted(list(visited))
-
-    return {
-        "source_node_id": node_id,
-        "connected_node_ids": connected_ids,
-        "total_count": len(connected_ids),
-    }
