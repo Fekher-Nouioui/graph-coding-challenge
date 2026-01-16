@@ -73,7 +73,7 @@ def get_connected_nodes_cte(db: Session, node_id: int) -> dict:
             FROM edges e
             INNER JOIN reachable_nodes rn ON e.source_node_id = rn.node_id
         )
-        SELECT DISTINCT node_id
+        SELECT node_id
         FROM reachable_nodes
         ORDER BY node_id
         """
